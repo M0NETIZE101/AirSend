@@ -4,14 +4,14 @@
 
 export class PeerManager {
     constructor(myId, options = {}) {
-        // myId: The ID this peer will use (sender uses room code, joiner uses null for auto-assign)
         this.myId = myId || null;
-        this.targetId = null;      // The peer ID we want to connect to (joiner only)
+        this.targetId = null;
         this.isSender = options.isSender || false;
         this.peer = null;
         this.conn = null;
         this.isConnected = false;
-        this.isReady = false;      // Track if PeerJS is ready
+        this.isReady = false;
+        this.isConnecting = false;  // NEW: Prevent duplicate connection attempts
         this.onConnectionCallback = null;
         this.onDataCallback = null;
         this.onDisconnectCallback = null;
@@ -37,8 +37,7 @@ export class PeerManager {
             console.log('✅ Peer opened with ID:', id);
             this.isReady = true;
             
-            // If we have a target ID and we're not the sender, try to connect
-            if (this.targetId && !this.isSender) {
+            if (this.targetId && !this.isSender && !this.isConnected) {
                 console.log('🔄 Auto-connecting to target:', this.targetId);
                 this.tryConnectToTarget();
             }
@@ -46,38 +45,51 @@ export class PeerManager {
 
         this.peer.on('connection', (conn) => {
             console.log('📥 Incoming connection from:', conn.peer);
-            this.handleConnection(conn);
+            // Only handle if we're the sender (or not already connected)
+            if (!this.isConnected) {
+                this.handleConnection(conn);
+            } else {
+                console.log('⚠️ Already connected, ignoring duplicate connection');
+                conn.close();
+            }
         });
 
         this.peer.on('error', (err) => {
             console.error('❌ Peer error:', err);
+            this.isConnecting = false;
             if (this.onErrorCallback) this.onErrorCallback(err);
         });
 
         this.peer.on('disconnected', () => {
             console.log('🔌 Peer disconnected');
             this.isReady = false;
+            this.isConnecting = false;
             if (this.onDisconnectCallback) this.onDisconnectCallback();
         });
 
         this.peer.on('close', () => {
             console.log('🔌 Peer closed');
             this.isReady = false;
+            this.isConnecting = false;
+            this.isConnected = false;
         });
     }
 
-    // Set the target peer ID to connect to (for joiner)
     setTargetId(targetId) {
         console.log('🎯 Setting target ID:', targetId);
         this.targetId = targetId;
-        // If already ready, try to connect immediately
-        if (this.isReady && !this.isSender) {
+        // If already ready and not the sender, try to connect
+        if (this.isReady && !this.isSender && !this.isConnected) {
             this.tryConnectToTarget();
         }
     }
 
-    // Try to connect to the target peer
     tryConnectToTarget() {
+        // Prevent duplicate connection attempts
+        if (this.isConnecting) {
+            console.log('⚠️ Connection already in progress, skipping duplicate');
+            return;
+        }
         if (!this.targetId) {
             console.warn('⚠️ No target ID set');
             return;
@@ -92,6 +104,7 @@ export class PeerManager {
         }
 
         console.log('🔗 Attempting to connect to:', this.targetId);
+        this.isConnecting = true;
         
         try {
             this.conn = this.peer.connect(this.targetId, {
@@ -103,17 +116,26 @@ export class PeerManager {
             
         } catch (error) {
             console.error('❌ Connection error:', error);
+            this.isConnecting = false;
             if (this.onErrorCallback) this.onErrorCallback(error);
         }
     }
 
     handleConnection(conn) {
+        // If we already have a connection, close the new one
+        if (this.isConnected && this.conn) {
+            console.log('⚠️ Already connected, closing duplicate connection');
+            conn.close();
+            return;
+        }
+
         this.conn = conn;
         this.isConnected = false;
 
         conn.on('open', () => {
             console.log('✅ Connection established with:', conn.peer);
             this.isConnected = true;
+            this.isConnecting = false;
             if (this.onConnectionCallback) this.onConnectionCallback();
         });
 
@@ -124,16 +146,17 @@ export class PeerManager {
         conn.on('close', () => {
             console.log('🔌 Connection closed');
             this.isConnected = false;
+            this.isConnecting = false;
             if (this.onDisconnectCallback) this.onDisconnectCallback();
         });
 
         conn.on('error', (err) => {
             console.error('❌ Connection error:', err);
+            this.isConnecting = false;
             if (this.onErrorCallback) this.onErrorCallback(err);
         });
     }
 
-    // For sender: wait for connection
     waitForConnection() {
         console.log('⏳ Sender waiting for connection...');
         return new Promise((resolve, reject) => {
@@ -157,12 +180,18 @@ export class PeerManager {
         });
     }
 
-    // For joiner: connect to a room
     connectToRoom(roomCode) {
         console.log('🔗 Joiner connecting to room:', roomCode);
+        // Set the target ID - this may trigger the connection if already ready
         this.setTargetId(roomCode);
         
         return new Promise((resolve, reject) => {
+            // If we're already connected, resolve immediately
+            if (this.isConnected) {
+                resolve();
+                return;
+            }
+
             const timeout = setTimeout(() => {
                 reject(new Error('Connection timeout'));
             }, 30000);
@@ -181,9 +210,9 @@ export class PeerManager {
                 reject(err);
             };
 
-            // If already ready, the connection attempt was already made
-            // If not, it will be made when 'open' fires
-            if (this.isReady && !this.isConnected) {
+            // If not ready yet, the 'open' event will trigger the connection
+            // If ready but not connected, try to connect (setTargetId already tried)
+            if (this.isReady && !this.isConnected && !this.isConnecting) {
                 this.tryConnectToTarget();
             }
         });
@@ -191,6 +220,7 @@ export class PeerManager {
 
     send(data) {
         if (!this.conn || !this.isConnected) {
+            console.error('❌ Cannot send: not connected');
             throw new Error('Not connected');
         }
         this.conn.send(data);
@@ -205,6 +235,7 @@ export class PeerManager {
         }
         this.isConnected = false;
         this.isReady = false;
+        this.isConnecting = false;
         this.targetId = null;
     }
 

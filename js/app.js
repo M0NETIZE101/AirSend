@@ -9,7 +9,6 @@ import { ChatManager } from './chat.js';
 
 export class App {
     constructor() {
-        // State
         this.state = {
             roomId: null,
             isSender: false,
@@ -18,11 +17,8 @@ export class App {
             transferStartTime: null
         };
 
-        // Managers
         this.fileManager = new FileManager();
         this.chatManager = new ChatManager();
-
-        // DOM Elements
         this.pages = {};
         this.elements = {};
 
@@ -30,19 +26,11 @@ export class App {
     }
 
     async init() {
-        // Load page content
         await this.loadPages();
-
-        // Initialize DOM references
         this.cacheElements();
-
-        // Setup event listeners
         this.setupEventListeners();
-
-        // Handle URL parameters
         this.handleURLParams();
 
-        // Setup chat callback
         if (this.chatManager && typeof this.chatManager.onNewMessage === 'function') {
             this.chatManager.onNewMessage((message) => {
                 this.renderChatMessages();
@@ -84,7 +72,6 @@ export class App {
     }
 
     setupEventListeners() {
-        // Create Room
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="create-room"]');
             if (target) {
@@ -93,7 +80,6 @@ export class App {
             }
         });
 
-        // Join Room
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="join-room"]');
             if (target) {
@@ -102,14 +88,12 @@ export class App {
             }
         });
 
-        // Room code inputs
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('code-box')) {
                 this.handleCodeInput(e.target);
             }
         });
 
-        // Chat send
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="send-chat"]');
             if (target) {
@@ -117,7 +101,6 @@ export class App {
             }
         });
 
-        // Enter key for chat
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const target = e.target;
@@ -128,12 +111,10 @@ export class App {
             }
         });
 
-        // File drop
         setTimeout(() => {
             this.setupFileDrop();
         }, 500);
 
-        // Auto-join on Enter key in code inputs
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
@@ -213,10 +194,6 @@ export class App {
         }
     }
 
-    // ============================================
-    // NAVIGATION
-    // ============================================
-
     navigateTo(page) {
         Object.values(this.pages).forEach(p => {
             if (p) p.classList.remove('active');
@@ -242,7 +219,6 @@ export class App {
             
             console.log('📋 Room ID:', roomId);
 
-            // Sender: Use roomId as their own Peer ID
             this.state.peerManager = new PeerManager(roomId, { isSender: true });
             
             this.state.peerManager.onConnection(() => {
@@ -275,7 +251,6 @@ export class App {
                 Utils.showToast('🔌 Connection lost', 'error');
             });
 
-            // Sender waits for connection
             this.state.peerManager.waitForConnection()
                 .then(() => {
                     console.log('✅ Peer connected successfully!');
@@ -285,7 +260,6 @@ export class App {
                     Utils.showToast('❌ Connection failed: ' + err.message, 'error');
                 });
 
-            // Show waiting room
             this.showWaitingRoom(roomId);
             Utils.showToast('✅ Room created: ' + roomId, 'success');
 
@@ -313,7 +287,6 @@ export class App {
             this.state.roomId = code;
             this.state.isSender = false;
 
-            // Joiner: Use null for auto-assigned ID
             this.state.peerManager = new PeerManager(null, { isSender: false });
             
             this.state.peerManager.onConnection(() => {
@@ -346,12 +319,10 @@ export class App {
                 Utils.showToast('🔌 Connection lost', 'error');
             });
 
-            // Show waiting room
             this.navigateTo('waiting');
             const statusEl = document.getElementById('waiting-status');
             if (statusEl) statusEl.textContent = 'Connecting to room...';
 
-            // Connect to the room
             console.log('🔗 Attempting to connect to:', code);
             
             this.state.peerManager.connectToRoom(code)
@@ -487,12 +458,15 @@ export class App {
         for (const file of files) {
             try {
                 const fileData = await this.fileManager.readFileAsBuffer(file);
+                // ✅ FIXED: Properly structured message with unique type
                 this.state.peerManager.send({
                     type: 'file',
-                    name: fileData.name,
-                    type: fileData.type,
-                    size: fileData.size,
-                    data: fileData.data
+                    payload: {
+                        name: fileData.name,
+                        mimeType: fileData.type,
+                        size: fileData.size,
+                        data: fileData.data
+                    }
                 });
                 sentCount++;
                 if (btn) btn.textContent = `⏳ Sending ${sentCount}/${totalFiles}`;
@@ -524,8 +498,28 @@ export class App {
     // ============================================
 
     handleReceivedFile(data) {
-        const file = this.fileManager.addReceivedFile(data);
-        Utils.showToast(`📥 Received: ${data.name}`, 'success');
+        // ✅ FIXED: Handle both old and new message formats
+        let fileData;
+        if (data.payload) {
+            // New format
+            fileData = {
+                name: data.payload.name,
+                type: data.payload.mimeType || 'application/octet-stream',
+                size: data.payload.size,
+                data: data.payload.data
+            };
+        } else {
+            // Legacy format (backward compatible)
+            fileData = {
+                name: data.name,
+                type: data.type || 'application/octet-stream',
+                size: data.size || data.data?.byteLength || 0,
+                data: data.data
+            };
+        }
+
+        const file = this.fileManager.addReceivedFile(fileData);
+        Utils.showToast(`📥 Received: ${fileData.name}`, 'success');
         this.renderReceiverFiles();
         this.updateReceiverStatus();
         this.downloadFile(file.id);
@@ -755,10 +749,6 @@ export class App {
         Utils.showToast('🔌 Room closed', 'info');
         this.navigateTo('landing');
     }
-
-    // ============================================
-    // SHARED FUNCTIONS
-    // ============================================
 
     copyInviteLink() {
         const url = window.location.href.split('?')[0] + '?room=' + this.state.roomId;
