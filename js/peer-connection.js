@@ -1,130 +1,112 @@
+// ============================================
+// PEER CONNECTION MANAGER
+// ============================================
+
 export class PeerManager {
-    constructor(roomId) {
+    constructor(roomId, options = {}) {
         this.roomId = roomId;
+        this.isSender = options.isSender || false;
         this.peer = null;
         this.conn = null;
-        this.isSender = false;
-        this.onFileCallback = null;
-        this.connectionPromise = null;
-        this.connectionResolve = null;
-        this.connectionReject = null;
+        this.isConnected = false;
+        this.onConnectionCallback = null;
+        this.onDataCallback = null;
+        this.onDisconnectCallback = null;
+        this.onErrorCallback = null;
         
         this.init();
     }
-    
+
     init() {
-        // Use PeerJS with free signaling server
         this.peer = new Peer(this.roomId, {
             debug: 0,
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
+                    { urls: 'stun:stun1.l.google.com:19302' }
                 ]
             }
         });
-        
-        // Setup error handling
-        this.peer.on('error', (error) => {
-            console.error('PeerJS error:', error);
-            if (this.connectionReject) {
-                this.connectionReject(error);
-            }
+
+        this.peer.on('open', (id) => {
+            console.log('✅ Peer opened:', id);
         });
-        
-        // Setup connection handler (for receivers)
+
         this.peer.on('connection', (conn) => {
             this.handleConnection(conn);
         });
-    }
-    
-    waitForConnection() {
-        this.isSender = true;
-        
-        // Wait for someone to connect
-        return new Promise((resolve, reject) => {
-            this.connectionResolve = resolve;
-            this.connectionReject = reject;
-            
-            // Timeout after 60 seconds
-            setTimeout(() => {
-                if (!this.conn) {
-                    reject(new Error('Connection timeout'));
-                }
-            }, 60000);
+
+        this.peer.on('error', (err) => {
+            console.error('❌ Peer error:', err);
+            if (this.onErrorCallback) this.onErrorCallback(err);
+        });
+
+        this.peer.on('disconnected', () => {
+            console.log('🔌 Peer disconnected');
+            if (this.onDisconnectCallback) this.onDisconnectCallback();
         });
     }
-    
+
+    handleConnection(conn) {
+        this.conn = conn;
+        this.isConnected = true;
+
+        conn.on('open', () => {
+            console.log('✅ Connection established with:', conn.peer);
+            if (this.onConnectionCallback) this.onConnectionCallback();
+        });
+
+        conn.on('data', (data) => {
+            if (this.onDataCallback) this.onDataCallback(data);
+        });
+
+        conn.on('close', () => {
+            this.isConnected = false;
+            console.log('🔌 Connection closed');
+            if (this.onDisconnectCallback) this.onDisconnectCallback();
+        });
+
+        conn.on('error', (err) => {
+            console.error('❌ Connection error:', err);
+            if (this.onErrorCallback) this.onErrorCallback(err);
+        });
+    }
+
     connectToRoom() {
-        this.isSender = false;
-        
         return new Promise((resolve, reject) => {
-            this.connectionResolve = resolve;
-            this.connectionReject = reject;
-            
             try {
-                // Connect to the room
                 this.conn = this.peer.connect(this.roomId, {
                     reliable: true,
                     serialization: 'binary'
                 });
                 
-                this.handleConnection(this.conn);
+                this.conn.on('open', () => {
+                    this.isConnected = true;
+                    resolve();
+                });
+
+                this.conn.on('error', reject);
                 
+                // Timeout
+                setTimeout(() => {
+                    if (!this.isConnected) {
+                        reject(new Error('Connection timeout'));
+                    }
+                }, 30000);
+
             } catch (error) {
                 reject(error);
             }
         });
     }
-    
-    handleConnection(conn) {
-        this.conn = conn;
-        
-        conn.on('open', () => {
-            console.log('✅ Peer connection established');
-            if (this.connectionResolve) {
-                this.connectionResolve();
-            }
-        });
-        
-        conn.on('data', (data) => {
-            // Check if it's a file transfer
-            if (data && data.type === 'file') {
-                if (this.onFileCallback) {
-                    this.onFileCallback(data);
-                }
-            }
-        });
-        
-        conn.on('close', () => {
-            console.log('🔌 Peer connection closed');
-        });
-        
-        conn.on('error', (error) => {
-            console.error('Connection error:', error);
-        });
-    }
-    
-    sendFile(fileData) {
-        if (!this.conn || this.conn.close) {
-            throw new Error('No active connection');
+
+    send(data) {
+        if (!this.conn || !this.isConnected) {
+            throw new Error('Not connected');
         }
-        
-        // Send file with type marker
-        this.conn.send({
-            type: 'file',
-            name: fileData.name,
-            type: fileData.type,
-            size: fileData.size,
-            data: fileData.data
-        });
+        this.conn.send(data);
     }
-    
-    onFileReceived(callback) {
-        this.onFileCallback = callback;
-    }
-    
+
     disconnect() {
         if (this.conn) {
             this.conn.close();
@@ -132,9 +114,22 @@ export class PeerManager {
         if (this.peer) {
             this.peer.destroy();
         }
+        this.isConnected = false;
     }
-    
-    isConnected() {
-        return this.conn && this.conn.open;
+
+    onConnection(callback) {
+        this.onConnectionCallback = callback;
+    }
+
+    onData(callback) {
+        this.onDataCallback = callback;
+    }
+
+    onDisconnect(callback) {
+        this.onDisconnectCallback = callback;
+    }
+
+    onError(callback) {
+        this.onErrorCallback = callback;
     }
 }

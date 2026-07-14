@@ -1,0 +1,111 @@
+<!-- Top Navigation -->
+<nav class="flex justify-between items-center w-full px-margin-desktop py-4 bg-surface sticky top-0 z-50 shadow-[0_2px_12px_rgba(26,26,43,0.04)]">
+    <div class="flex items-center gap-lg">
+        <span class="font-headline-lg text-headline-lg font-bold text-primary cursor-pointer" onclick="window.app.navigateTo('landing')">AirSend</span>
+        <div class="hidden md:flex gap-md">
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">Inbox</a>
+            <a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1">Channels</a>
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">Network</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-md">
+        <div class="relative hidden lg:block">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+            <input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:bg-surface transition-all w-64 text-body-sm" placeholder="Search files..." type="text"/>
+        </div>
+        <div class="flex gap-sm">
+            <button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors">notifications</button>
+            <button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-variant rounded-full transition-colors">help</button>
+        </div>
+        <button class="hidden md:flex items-center gap-xs bg-primary text-on-primary px-sm py-2 rounded-lg font-bold hover:shadow-md active:opacity-80 transition-all">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span>New Message</span>
+        </button>
+        <img class="w-10 h-10 rounded-full border-2 border-surface-container-highest object-cover cursor-pointer" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e9ddff'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='16' font-weight='bold' fill='%235400c3'%3EA%3C/text%3E%3C/svg%3E" alt="Avatar"/>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-margin-desktop py-xl grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <!-- Left Column -->
+    <div class="lg:col-span-7 space-y-gutter">
+        <header>
+            <h1 class="font-headline-xl text-headline-xl text-on-surface mb-2">Receiver Dashboard</h1>
+            <p class="text-on-surface-variant text-body-md">Monitoring incoming high-speed data transfers.</p>
+        </header>
+
+        <!-- Status Container -->
+        <div id="receiver-status-container" class="bg-surface-container-lowest rounded-xl p-xl shadow-[0_2px_12px_rgba(26,26,43,0.04)] border border-surface-container flex flex-col items-center justify-center text-center min-h-[400px] relative overflow-hidden group hover:shadow-[0_8px_24px_rgba(26,26,43,0.08)] transition-all duration-300">
+            <div class="w-24 h-24 rounded-full bg-primary-fixed flex items-center justify-center mb-md relative">
+                <div class="absolute inset-0 rounded-full bg-primary animate-ping opacity-20"></div>
+                <span class="material-symbols-outlined text-primary text-[48px]" style="font-variation-settings: 'FILL' 1;">cloud_download</span>
+            </div>
+            <h2 id="receiver-status-title" class="font-headline-lg text-headline-lg text-on-surface mb-sm">Waiting for files...</h2>
+            <p id="receiver-status-sub" class="text-on-surface-variant max-w-sm mb-lg">Share your secure link to start receiving encrypted shipments. Your connection is live and listening.</p>
+            <div class="flex flex-wrap justify-center gap-sm">
+                <button onclick="window.app.copyInviteLink()" class="bg-primary text-on-primary px-lg py-3 rounded-full font-bold flex items-center gap-xs hover:shadow-lg transition-all active:scale-95">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    Copy Invite Link
+                </button>
+                <button class="bg-surface border border-outline-variant text-on-surface px-lg py-3 rounded-full font-bold hover:bg-surface-container-low transition-all">
+                    View Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="lg:col-span-5 space-y-gutter">
+        <!-- Active Transfers -->
+        <section class="bg-surface-container-lowest rounded-xl p-md shadow-[0_2px_12px_rgba(26,26,43,0.04)] border border-surface-container">
+            <div class="flex justify-between items-center mb-md">
+                <h3 class="font-headline-lg text-[20px] text-on-surface">Active Transfers</h3>
+                <span id="receiver-active-badge" class="bg-secondary-fixed text-on-secondary-fixed-variant px-3 py-1 rounded-full text-label-caps font-label-caps">0 IN PROGRESS</span>
+            </div>
+            <div id="receiver-active-list" class="space-y-md">
+                <p class="text-on-surface-variant text-sm text-center py-4">No active transfers</p>
+            </div>
+        </section>
+
+        <!-- Recently Received -->
+        <section class="bg-surface-container-lowest rounded-xl p-md shadow-[0_2px_12px_rgba(26,26,43,0.04)] border border-surface-container">
+            <div class="flex justify-between items-center mb-md">
+                <h3 class="font-headline-lg text-[20px] text-on-surface">Recently Received</h3>
+                <button class="text-primary text-body-sm font-bold hover:underline">View All</button>
+            </div>
+            <div id="receiver-received-list" class="divide-y divide-surface-container">
+                <p class="text-on-surface-variant text-sm text-center py-4">No files received yet</p>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section class="bg-surface rounded-xl shadow-[0_2px_12px_rgba(26,26,43,0.04)] p-md">
+            <div class="flex items-center justify-between mb-md">
+                <h3 class="font-headline-lg text-lg text-on-background">💬 Chat</h3>
+                <span class="text-xs text-on-surface-variant">Real-time messages</span>
+            </div>
+            <div id="receiver-chat-messages" class="h-48 overflow-y-auto mb-md p-2 bg-surface-container-low rounded-lg border border-outline-variant/30 space-y-2">
+                <div class="text-center text-xs text-on-surface-variant py-4">No messages yet. Start the conversation!</div>
+            </div>
+            <div class="flex gap-sm">
+                <input id="receiver-chat-input" type="text" class="flex-1 p-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm" placeholder="Type a message..." />
+                <button data-action="send-chat" class="px-4 py-2 primary-gradient text-white rounded-lg font-bold hover:shadow-md transition-all active:scale-95">
+                    Send
+                </button>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full py-xl px-margin-desktop bg-surface-container-lowest border-t border-outline-variant">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-md">
+        <span class="text-on-surface-variant text-body-sm">© 2026 MINDS OF INTELLECT [M.O.I]</span>
+        <div class="flex gap-lg">
+            <a class="text-on-surface-variant text-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Privacy Policy</a>
+            <a class="text-on-surface-variant text-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Terms of Service</a>
+            <a class="text-on-surface-variant text-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Compliance</a>
+            <a class="text-on-surface-variant text-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Security</a>
+        </div>
+    </div>
+</footer>

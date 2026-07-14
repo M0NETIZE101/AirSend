@@ -1,0 +1,113 @@
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full px-margin-desktop py-4 bg-surface sticky top-0 z-50 shadow-[0_2px_12px_rgba(26,26,43,0.04)]">
+    <div class="flex items-center gap-md">
+        <span class="font-headline-lg text-headline-lg font-bold text-primary cursor-pointer" onclick="window.app.navigateTo('landing')">AirSend</span>
+        <nav class="hidden md:flex items-center gap-sm ml-lg">
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">Inbox</a>
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">Tasks</a>
+            <a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1">Channels</a>
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors">Network</a>
+        </nav>
+    </div>
+    <div class="flex items-center gap-sm">
+        <button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container rounded-full transition-colors">notifications</button>
+        <button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container rounded-full transition-colors">help</button>
+        <div class="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-container">
+            <img class="w-full h-full object-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e9ddff'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='16' font-weight='bold' fill='%235400c3'%3EA%3C/text%3E%3C/svg%3E" alt="Avatar"/>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-xl max-w-7xl mx-auto w-full">
+    <!-- Success Hero -->
+    <div class="text-center mb-xl success-animation">
+        <div id="confetti-container" class="inline-flex items-center justify-center w-24 h-24 bg-[#E8F5E9] rounded-full mb-md">
+            <span class="material-symbols-outlined text-success-green !text-6xl" style="font-variation-settings: 'wght' 700;">check_circle</span>
+        </div>
+        <h1 class="font-headline-xl text-headline-xl text-on-background mb-base">Transfer Complete!</h1>
+        <p id="confirmation-message" class="font-body-md text-body-md text-on-surface-variant max-w-lg mx-auto">
+            Your files have been successfully delivered to the destination.
+        </p>
+    </div>
+
+    <!-- Summary Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter w-full mb-xl">
+        <!-- Delivery Status -->
+        <div class="md:col-span-2 bg-surface-container-lowest p-md rounded-xl shadow-[0_2px_12px_rgba(26,26,43,0.04)] border border-outline-variant/30">
+            <div class="flex justify-between items-start mb-sm">
+                <div>
+                    <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Channel Destination</span>
+                    <h3 id="confirmation-channel" class="font-headline-lg text-headline-lg text-on-surface">Global Operations Room</h3>
+                </div>
+                <span class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-caps text-label-caps">INTERNAL PORTAL</span>
+            </div>
+            <div id="confirmation-file-list" class="space-y-sm">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="bg-surface-container-lowest p-md rounded-xl shadow-[0_2px_12px_rgba(26,26,43,0.04)] border border-outline-variant/30 flex flex-col justify-between">
+            <div>
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Transfer Summary</span>
+                <div class="mt-md space-y-md">
+                    <div class="flex justify-between border-b border-outline-variant pb-xs">
+                        <span class="text-on-surface-variant">Total Size</span>
+                        <span id="confirmation-total-size" class="font-bold text-on-surface">0 MB</span>
+                    </div>
+                    <div class="flex justify-between border-b border-outline-variant pb-xs">
+                        <span class="text-on-surface-variant">Total Files</span>
+                        <span id="confirmation-total-files" class="font-bold text-on-surface">0 Items</span>
+                    </div>
+                    <div class="flex justify-between border-b border-outline-variant pb-xs">
+                        <span class="text-on-surface-variant">Time Taken</span>
+                        <span id="confirmation-time" class="font-bold text-on-surface">0.0 Seconds</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-lg">
+                <div class="flex -space-x-2" id="confirmation-avatars">
+                    <div class="w-8 h-8 rounded-full border-2 border-white bg-surface-dim flex items-center justify-center text-[10px] font-bold">JD</div>
+                    <div class="w-8 h-8 rounded-full border-2 border-white bg-primary-container flex items-center justify-center text-[10px] font-bold text-white">MK</div>
+                    <div class="w-8 h-8 rounded-full border-2 border-white bg-secondary-fixed flex items-center justify-center text-[10px] font-bold text-on-secondary-fixed">SA</div>
+                    <div class="w-8 h-8 rounded-full border-2 border-white bg-outline-variant flex items-center justify-center text-[10px] font-bold">+8</div>
+                </div>
+                <p id="confirmation-team-count" class="text-xs text-on-surface-variant mt-xs">Notified 11 team members</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col md:flex-row gap-sm w-full max-w-2xl">
+        <button onclick="window.app.sendMoreFiles()" class="flex-1 py-md px-lg rounded-xl primary-gradient text-white font-bold text-body-md hover:shadow-lg transition-all duration-300 active:scale-95 flex items-center justify-center gap-xs">
+            <span class="material-symbols-outlined">send_time_extension</span>
+            Send More Files
+        </button>
+        <button onclick="window.app.downloadAllFiles()" class="flex-1 py-md px-lg rounded-xl bg-white border border-outline-variant text-on-background font-semibold text-body-md hover:bg-surface-container-low hover:shadow-md transition-all duration-300 active:scale-95 flex items-center justify-center gap-xs">
+            <span class="material-symbols-outlined">download</span>
+            Download All Archive
+        </button>
+        <button onclick="window.app.closeRoom()" class="py-md px-lg rounded-xl bg-white border border-outline-variant text-error font-semibold text-body-md hover:bg-error-container/20 transition-all duration-300 active:scale-95 flex items-center justify-center gap-xs">
+            <span class="material-symbols-outlined">close</span>
+            Close Room
+        </button>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant">
+    <div class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-md">
+        <div class="flex items-center gap-xs">
+            <span class="font-headline-lg text-headline-lg font-bold text-primary">AirSend</span>
+            <span class="text-on-surface-variant text-body-sm">| MINDS OF INTELLECT</span>
+        </div>
+        <div class="flex flex-wrap justify-center gap-md">
+            <a class="text-on-surface-variant font-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Privacy Policy</a>
+            <a class="text-on-surface-variant font-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Terms of Service</a>
+            <a class="text-on-surface-variant font-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Compliance</a>
+            <a class="text-on-surface-variant font-body-sm hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Security</a>
+        </div>
+        <p class="text-on-surface-variant font-body-sm">© 2026 MINDS OF INTELLECT [M.O.I]</p>
+    </div>
+</footer>

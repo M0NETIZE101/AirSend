@@ -1,0 +1,74 @@
+<!-- Top Navigation -->
+<nav class="flex justify-between items-center w-full px-margin-desktop py-4 bg-surface sticky top-0 z-50 shadow-[0_2px_12px_rgba(26,26,43,0.04)]">
+    <div class="flex items-center gap-lg">
+        <span class="font-headline-lg text-headline-lg font-bold text-primary cursor-pointer" onclick="window.app.navigateTo('landing')">AirSend</span>
+        <div class="hidden md:flex items-center gap-md">
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Inbox</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Tasks</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Channels</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Network</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-sm">
+        <button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">notifications</button>
+        <button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">help</button>
+        <div class="h-10 w-10 rounded-full overflow-hidden border border-outline-variant">
+            <img class="w-full h-full object-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23e9ddff'/%3E%3Ctext x='20' y='26' text-anchor='middle' font-size='16' font-weight='bold' fill='%235400c3'%3EA%3C/text%3E%3C/svg%3E" alt="Avatar"/>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-xl min-h-[80vh]">
+    <div class="max-w-xl w-full flex flex-col items-center text-center space-y-xl">
+        <!-- Branding & Status -->
+        <div class="space-y-sm">
+            <h1 class="font-headline-xl text-headline-xl text-on-background">Waiting Room</h1>
+            <div class="flex items-center justify-center gap-xs text-primary font-body-md pulse-soft">
+                <span class="material-symbols-outlined text-[18px]">sync</span>
+                <span id="waiting-status">Waiting for connection...</span>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="bg-surface-container-lowest shadow-[0_2px_12px_rgba(26,26,43,0.04)] rounded-xl p-md flex flex-col items-center justify-center space-y-md border border-outline-variant w-full md:w-[320px] aspect-square group hover:shadow-[0_8px_24px_rgba(26,26,43,0.08)] transition-all duration-300">
+            <div id="waiting-qr" class="relative w-full h-full p-sm bg-white rounded-lg border border-outline-variant flex items-center justify-center">
+                <p class="text-on-surface-variant">Loading QR...</p>
+            </div>
+            <p class="font-body-sm text-on-surface-variant">Scan to join via mobile device</p>
+        </div>
+
+        <!-- Room Code -->
+        <div class="space-y-md w-full">
+            <p class="font-label-caps text-label-caps text-on-surface-variant">OR ENTER 6-DIGIT CODE</p>
+            <div class="flex gap-xs md:gap-sm justify-center" id="waiting-room-codes">
+                <div class="code-box filled">-</div>
+                <div class="code-box filled">-</div>
+                <div class="code-box filled">-</div>
+                <div class="code-box filled">-</div>
+                <div class="code-box filled">-</div>
+                <div class="code-box filled">-</div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="pt-lg flex flex-col items-center gap-sm">
+            <button class="primary-gradient text-on-primary px-xl py-md rounded-full font-body-md font-bold shadow-md hover:shadow-lg transition-all active:scale-95">
+                Join with Account
+            </button>
+            <a class="text-on-surface-variant font-body-sm underline underline-offset-4 hover:text-primary transition-colors cursor-pointer" href="#">Problems connecting? Get help</a>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="w-full bg-surface-container-lowest border-t border-outline-variant">
+    <div class="w-full py-md px-margin-desktop flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-md">
+        <span class="font-body-sm text-on-surface-variant">© 2026 MINDS OF INTELLECT [M.O.I]</span>
+        <div class="flex gap-md">
+            <a class="font-body-sm text-on-surface-variant hover:text-primary hover:underline underline-offset-4 transition-colors" href="#">Privacy Policy</a>
+            <a class="font-body-sm text-on-surface-variant hover:text-primary hover:underline underline-offset-4 transition-colors" href="#">Terms of Service</a>
+            <a class="font-body-sm text-on-surface-variant hover:text-primary hover:underline underline-offset-4 transition-colors" href="#">Compliance</a>
+        </div>
+    </div>
+</footer>

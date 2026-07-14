@@ -1,108 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>AirSend - P2P File Transfer</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>AirSend | Share Anything, Anywhere</title>
     
-    <!-- PeerJS Library (Free signaling) -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Libraries -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    
-    <!-- QRCode Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
     
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#414754",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#adc7ff",
+                        "on-secondary-fixed-variant": "#5700c9",
+                        "tertiary": "#00647c",
+                        "secondary-fixed-dim": "#d1bcff",
+                        "primary": "#0059bb",
+                        "secondary-container": "#7000ff",
+                        "background": "#fcf8ff",
+                        "inverse-surface": "#2f2f41",
+                        "surface-dim": "#dad7ef",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#1a1a2b",
+                        "surface-container": "#efecff",
+                        "surface-container-highest": "#e3e0f8",
+                        "on-tertiary-fixed-variant": "#004e60",
+                        "on-tertiary-fixed": "#001f28",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#004493",
+                        "primary-container": "#0070ea",
+                        "surface-variant": "#e3e0f8",
+                        "primary-fixed-dim": "#adc7ff",
+                        "surface-container-high": "#e8e6fe",
+                        "on-tertiary-container": "#fafdff",
+                        "surface": "#fcf8ff",
+                        "surface-bright": "#fcf8ff",
+                        "on-secondary-container": "#ddcdff",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f2efff",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#1a1a2b",
+                        "on-secondary-fixed": "#23005b",
+                        "on-primary-container": "#fefcff",
+                        "surface-tint": "#005bc0",
+                        "tertiary-container": "#007f9c",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#b7eaff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#f5f2ff",
+                        "on-primary-fixed": "#001a41",
+                        "tertiary-fixed-dim": "#4cd6ff",
+                        "secondary": "#5400c3",
+                        "outline-variant": "#c1c6d7",
+                        "outline": "#717786",
+                        "success-green": "#2E7D32"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-desktop": "40px",
+                        "lg": "48px",
+                        "xl": "80px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "xs": "8px",
+                        "sm": "16px",
+                        "base": "4px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>📦 AirSend</h1>
-            <p class="subtitle">Share anything, anywhere. No sign-up required.</p>
-        </header>
 
-        <!-- Main Content -->
-        <main>
-            <!-- Create Room Section -->
-            <div id="create-section" class="section active">
-                <div class="card">
-                    <h2>📤 Send Files</h2>
-                    <p class="hint">Generate a secure room to start sharing</p>
-                    <button id="create-room-btn" class="btn-primary">
-                        <span class="icon">✨</span> Create Room
-                    </button>
-                </div>
-                
-                <div class="divider">OR</div>
-                
-                <div class="card">
-                    <h2>📥 Receive Files</h2>
-                    <p class="hint">Enter a 6-digit room code to connect</p>
-                    <div class="input-group">
-                        <input type="text" id="room-input" maxlength="6" placeholder="Enter 6-digit code" />
-                        <button id="join-room-btn" class="btn-secondary">Connect</button>
-                    </div>
-                </div>
-            </div>
+<!-- Toast Container -->
+<div id="toast-container"></div>
 
-            <!-- Room Section -->
-            <div id="room-section" class="section" style="display: none;">
-                <div class="room-header">
-                    <div class="room-code-display">
-                        <span class="label">🔑 Your Room Code</span>
-                        <span id="room-code" class="code">------</span>
-                    </div>
-                    <button id="copy-code-btn" class="btn-small">📋 Copy</button>
-                </div>
-                
-                <div class="qr-container">
-                    <div id="qr-code"></div>
-                    <p class="hint">Scan with your camera or enter the code manually</p>
-                </div>
+<!-- ============================================ -->
+<!-- PAGE CONTAINERS (Loaded from pages/*.html) -->
+<!-- ============================================ -->
+<div id="page-landing" class="page active"></div>
+<div id="page-waiting" class="page"></div>
+<div id="page-sender" class="page"></div>
+<div id="page-receiver" class="page"></div>
+<div id="page-confirmation" class="page"></div>
 
-                <div class="status-container">
-                    <div id="connection-status" class="status waiting">
-                        <span class="status-icon">⏳</span>
-                        <span class="status-text">Waiting for connection...</span>
-                    </div>
-                </div>
+<!-- ============================================ -->
+<!-- JAVASCRIPT -->
+<!-- ============================================ -->
+<script type="module">
+    // Import all modules
+    import { Utils } from './js/utils.js';
+    import { PeerManager } from './js/peer-connection.js';
+    import { FileManager } from './js/file-transfer.js';
+    import { ChatManager } from './js/chat.js';
+    import { App } from './js/app.js';
+    
+    // Initialize the app when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = new App();
+        window.app = app;
+        console.log('🚀 AirSend initialized!');
+    });
+</script>
 
-                <!-- Sender Controls -->
-                <div id="sender-controls" style="display: none;">
-                    <div class="file-drop-area">
-                        <input type="file" id="file-input" multiple style="display: none;" />
-                        <label for="file-input" class="file-drop-label">
-                            <span class="icon">📁</span>
-                            <span>Drop files here or click to browse</span>
-                            <span class="file-info">Maximum 100MB per file</span>
-                        </label>
-                    </div>
-                    <div id="file-list"></div>
-                    <button id="send-files-btn" class="btn-primary" style="display: none;">
-                        <span class="icon">🚀</span> Send All Files
-                    </button>
-                </div>
-
-                <!-- Receiver Controls -->
-                <div id="receiver-controls" style="display: none;">
-                    <div id="transfer-progress" style="display: none;">
-                        <div class="progress-bar">
-                            <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
-                        </div>
-                        <div id="progress-text">Receiving file...</div>
-                    </div>
-                    <div id="received-files"></div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer>
-            <p class="disclaimer">🔒 End-to-end encrypted. Files never stored on any server.</p>
-            <p class="small">Made with ❤️ | P2P file sharing</p>
-        </footer>
-    </div>
-
-    <script type="module" src="js/app.js"></script>
 </body>
 </html>

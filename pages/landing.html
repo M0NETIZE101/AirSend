@@ -1,0 +1,108 @@
+<!-- Top Navigation -->
+<nav class="flex justify-between items-center w-full px-margin-desktop py-4 bg-surface sticky top-0 z-50 shadow-[0_2px_12px_rgba(26,26,43,0.04)]">
+    <div class="flex items-center gap-lg">
+        <span class="font-headline-lg text-headline-lg font-bold text-primary tracking-tight cursor-pointer" onclick="window.app.navigateTo('landing')">AirSend</span>
+        <div class="hidden md:flex items-center gap-md">
+            <a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md cursor-pointer">Inbox</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Tasks</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Channels</a>
+            <a class="text-on-surface-variant font-body-md text-body-md cursor-pointer hover:text-primary transition-colors">Network</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-sm">
+        <div class="hidden sm:flex items-center bg-surface-container-low px-sm py-xs rounded-full border border-outline-variant mr-sm">
+            <span class="material-symbols-outlined text-outline">search</span>
+            <input class="bg-transparent border-none focus:ring-0 text-body-sm w-32 lg:w-48" placeholder="Search files..." type="text"/>
+        </div>
+        <button class="material-symbols-outlined p-xs text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+        <button class="material-symbols-outlined p-xs text-on-surface-variant hover:text-primary transition-colors">help</button>
+        <button class="primary-gradient text-on-primary px-sm py-xs rounded-lg font-medium shadow-sm transition-all hover:shadow-md active:scale-95">New Message</button>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-margin-desktop pt-24 pb-16 text-center relative z-10">
+    <div class="inline-flex items-center gap-xs bg-primary-fixed/30 text-on-primary-fixed-variant px-sm py-1 rounded-full mb-md">
+        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">security</span>
+        <span class="font-label-caps text-label-caps uppercase tracking-widest">Enterprise Privacy</span>
+    </div>
+    <h1 class="font-headline-xl text-headline-xl mb-sm max-w-3xl mx-auto leading-tight text-on-background">
+        Share anything, <span class="text-transparent bg-clip-text primary-gradient">anywhere.</span>
+    </h1>
+    <p class="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto mb-xl">
+        Peer-to-peer file transfer with zero-knowledge architecture. No sign-up required.
+    </p>
+
+    <!-- Primary Action Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter max-w-4xl mx-auto">
+        <!-- Send Files Card -->
+        <div class="airy-card p-xl rounded-xl text-left border border-outline-variant/30 group">
+            <div class="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center mb-md group-hover:bg-primary-container/20 transition-colors">
+                <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">upload_file</span>
+            </div>
+            <h3 class="font-headline-lg text-[24px] mb-xs text-on-background">Send Files</h3>
+            <p class="text-body-sm text-on-surface-variant mb-lg">Start a secure peer-to-peer room and invite others to download.</p>
+            <button data-action="create-room" class="w-full py-sm primary-gradient text-on-primary rounded-lg font-bold flex items-center justify-center gap-xs transition-all hover:shadow-md active:scale-95">
+                <span>Create Room</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+        </div>
+
+        <!-- Receive Files Card -->
+        <div class="airy-card p-xl rounded-xl text-left border border-outline-variant/30">
+            <div class="w-12 h-12 bg-secondary-fixed/50 rounded-lg flex items-center justify-center mb-md">
+                <span class="material-symbols-outlined text-secondary text-[28px]" style="font-variation-settings: 'FILL' 1;">download_for_offline</span>
+            </div>
+            <h3 class="font-headline-lg text-[24px] mb-xs text-on-background">Receive Files</h3>
+            <p class="text-body-sm text-on-surface-variant mb-lg">Enter the 6-digit room code shared with you to start the transfer.</p>
+            <div class="flex gap-xs mb-lg" id="landing-room-inputs">
+                <input class="code-box" maxlength="1" type="text" data-index="0"/>
+                <input class="code-box" maxlength="1" type="text" data-index="1"/>
+                <input class="code-box" maxlength="1" type="text" data-index="2"/>
+                <input class="code-box" maxlength="1" type="text" data-index="3"/>
+                <input class="code-box" maxlength="1" type="text" data-index="4"/>
+                <input class="code-box" maxlength="1" type="text" data-index="5"/>
+            </div>
+            <button data-action="join-room" class="w-full py-sm bg-surface-container-highest text-on-background hover:bg-outline-variant/30 rounded-lg font-bold transition-colors">
+                Connect to Room
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Bento -->
+<section class="max-w-7xl mx-auto px-margin-desktop py-xl">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+        <div class="md:col-span-2 airy-card rounded-xl overflow-hidden flex flex-col md:flex-row">
+            <div class="md:w-1/2 p-lg flex flex-col justify-center">
+                <div class="inline-block px-xs py-base bg-tertiary-container/10 text-tertiary font-label-caps text-label-caps rounded mb-sm w-fit">FAST TRANSFERS</div>
+                <h4 class="font-headline-lg text-[24px] mb-sm">Direct Browser-to-Browser</h4>
+                <p class="text-body-md text-on-surface-variant">AirSend bypasses the cloud, connecting you directly to the recipient for maximum speed and security.</p>
+            </div>
+            <div class="md:w-1/2 relative min-h-[240px] bg-gradient-to-br from-primary-fixed/20 to-secondary-fixed/20 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[80px] text-primary/40">sync_alt</span>
+            </div>
+        </div>
+        <div class="airy-card p-lg rounded-xl flex flex-col justify-center border border-outline-variant/10">
+            <span class="material-symbols-outlined text-primary text-[40px] mb-sm">encrypted</span>
+            <h4 class="font-headline-lg text-[24px] mb-sm">Zero Knowledge</h4>
+            <p class="text-body-sm text-on-surface-variant">We never see your files. Encryption keys never leave your device. Your data is your business.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant">
+    <div class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-md">
+        <div class="flex flex-col items-center md:items-start gap-xs">
+            <span class="font-headline-lg text-headline-lg font-bold text-primary">AirSend</span>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">© 2026 MINDS OF INTELLECT [M.O.I]</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-md">
+            <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Privacy Policy</a>
+            <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Terms of Service</a>
+            <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Compliance</a>
+            <a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">Security</a>
+        </div>
+    </div>
+</footer>
