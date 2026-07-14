@@ -47,11 +47,10 @@ export class App {
             this.chatManager.onNewMessage((message) => {
                 this.renderChatMessages();
             });
-        } else {
-            console.warn('⚠️ ChatManager not available');
         }
 
         console.log('✅ App initialized');
+        console.log('📱 Open in another tab or device to test P2P');
     }
 
     async loadPages() {
@@ -75,7 +74,6 @@ export class App {
     }
 
     cacheElements() {
-        // Cache page containers
         this.pages = {
             landing: document.getElementById('page-landing'),
             waiting: document.getElementById('page-waiting'),
@@ -86,30 +84,32 @@ export class App {
     }
 
     setupEventListeners() {
-        // Landing page - Create Room (delegated event)
+        // Create Room
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="create-room"]');
             if (target) {
+                console.log('🖱️ Create Room clicked');
                 this.createRoom();
             }
         });
 
-        // Landing page - Join Room (delegated event)
+        // Join Room
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="join-room"]');
             if (target) {
+                console.log('🖱️ Join Room clicked');
                 this.joinRoom();
             }
         });
 
-        // Room code inputs - input handling
+        // Room code inputs
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('code-box')) {
                 this.handleCodeInput(e.target);
             }
         });
 
-        // Chat send (delegated event)
+        // Chat send
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action="send-chat"]');
             if (target) {
@@ -128,10 +128,24 @@ export class App {
             }
         });
 
-        // Setup file drop after DOM is ready
+        // File drop
         setTimeout(() => {
             this.setupFileDrop();
         }, 500);
+
+        // Join room on Enter key in code inputs
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
+                let allFilled = true;
+                inputs.forEach(input => {
+                    if (!input.value) allFilled = false;
+                });
+                if (allFilled && inputs.length > 0) {
+                    this.joinRoom();
+                }
+            }
+        });
     }
 
     handleCodeInput(input) {
@@ -150,7 +164,6 @@ export class App {
         const params = new URLSearchParams(window.location.search);
         const room = params.get('room');
         if (room && room.length === 6) {
-            // Auto-join the room
             setTimeout(() => {
                 const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
                 const digits = room.split('');
@@ -161,7 +174,6 @@ export class App {
             }, 500);
         }
 
-        // Handle hash navigation
         const hash = window.location.hash.replace('#', '');
         if (hash && ['landing', 'waiting', 'sender', 'receiver', 'confirmation'].includes(hash)) {
             this.navigateTo(hash);
@@ -173,10 +185,8 @@ export class App {
         const fileInput = document.getElementById('sender-file-input');
 
         if (dropZone && fileInput) {
-            // Click to browse
             dropZone.addEventListener('click', () => fileInput.click());
             
-            // Drag and drop
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropZone.classList.add('drag-over');
@@ -219,90 +229,143 @@ export class App {
     }
 
     // ============================================
-    // ROOM MANAGEMENT
+    // ROOM MANAGEMENT - FIXED
     // ============================================
 
     createRoom() {
-        const roomId = Utils.generateRoomId();
-        this.state.roomId = roomId;
-        this.state.isSender = true;
+        try {
+            console.log('🚀 Creating room...');
+            
+            // Generate 6-digit room code
+            const roomId = Utils.generateRoomId();
+            this.state.roomId = roomId;
+            this.state.isSender = true;
+            
+            console.log('📋 Room ID:', roomId);
 
-        // Create peer manager
-        this.state.peerManager = new PeerManager(roomId, { isSender: true });
-        
-        this.state.peerManager.onConnection(() => {
-            this.state.isConnected = true;
-            Utils.showToast('✅ Peer connected!', 'success');
-            this.navigateTo('sender');
-            this.updateSenderUI();
-        });
+            // Create peer manager with room ID
+            this.state.peerManager = new PeerManager(roomId, { isSender: true });
+            
+            // Set up event handlers BEFORE opening
+            this.state.peerManager.onConnection(() => {
+                console.log('✅ Peer connected!');
+                this.state.isConnected = true;
+                Utils.showToast('✅ Peer connected!', 'success');
+                this.navigateTo('sender');
+                this.updateSenderUI();
+            });
 
-        this.state.peerManager.onError((err) => {
-            Utils.showToast('❌ Connection error: ' + err.message, 'error');
-        });
+            this.state.peerManager.onError((err) => {
+                console.error('❌ Peer error:', err);
+                Utils.showToast('❌ Connection error: ' + err.message, 'error');
+            });
 
-        this.state.peerManager.onData((data) => {
-            if (data.type === 'chat') {
-                this.chatManager.receiveMessage(data);
-                this.renderChatMessages();
-            }
-        });
+            this.state.peerManager.onData((data) => {
+                console.log('📨 Data received:', data.type);
+                if (data.type === 'chat') {
+                    this.chatManager.receiveMessage(data);
+                    this.renderChatMessages();
+                }
+                if (data.type === 'file') {
+                    this.handleReceivedFile(data);
+                }
+            });
 
-        // Show waiting room
-        this.showWaitingRoom(roomId);
-        Utils.showToast('✅ Room created: ' + roomId, 'success');
+            this.state.peerManager.onDisconnect(() => {
+                console.log('🔌 Peer disconnected');
+                this.state.isConnected = false;
+                Utils.showToast('🔌 Connection lost', 'error');
+            });
+
+            // Show waiting room
+            this.showWaitingRoom(roomId);
+            Utils.showToast('✅ Room created: ' + roomId, 'success');
+            
+            console.log('✅ Room created successfully! Waiting for peer...');
+
+        } catch (error) {
+            console.error('❌ Create room error:', error);
+            Utils.showToast('❌ Failed to create room: ' + error.message, 'error');
+        }
     }
 
     joinRoom() {
-        const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
-        let code = '';
-        inputs.forEach(input => code += input.value);
+        try {
+            console.log('🚀 Joining room...');
+            
+            const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
+            let code = '';
+            inputs.forEach(input => code += input.value);
 
-        if (code.length !== 6) {
-            Utils.showToast('Please enter all 6 digits', 'error');
-            return;
-        }
-
-        this.state.roomId = code;
-        this.state.isSender = false;
-
-        // Create peer manager
-        this.state.peerManager = new PeerManager(null, { isSender: false });
-        
-        this.state.peerManager.onConnection(() => {
-            this.state.isConnected = true;
-            Utils.showToast('✅ Connected to sender!', 'success');
-            this.navigateTo('receiver');
-            this.updateReceiverUI();
-        });
-
-        this.state.peerManager.onError((err) => {
-            Utils.showToast('❌ Failed to connect: ' + err.message, 'error');
-        });
-
-        this.state.peerManager.onData((data) => {
-            if (data.type === 'file') {
-                this.handleReceivedFile(data);
+            if (code.length !== 6) {
+                Utils.showToast('Please enter all 6 digits', 'error');
+                return;
             }
-            if (data.type === 'chat') {
-                this.chatManager.receiveMessage(data);
-                this.renderChatMessages();
-            }
-        });
 
-        // Connect to room
-        this.state.peerManager.connectToRoom()
-            .then(() => {
-                // Connected successfully
-            })
-            .catch((err) => {
-                Utils.showToast('❌ Failed to join: ' + err.message, 'error');
+            console.log('📋 Joining room:', code);
+
+            this.state.roomId = code;
+            this.state.isSender = false;
+
+            // Create peer manager (no room ID initially)
+            this.state.peerManager = new PeerManager(null, { isSender: false });
+            
+            // Set up event handlers
+            this.state.peerManager.onConnection(() => {
+                console.log('✅ Connected to sender!');
+                this.state.isConnected = true;
+                Utils.showToast('✅ Connected to sender!', 'success');
+                this.navigateTo('receiver');
+                this.updateReceiverUI();
             });
 
-        // Show waiting room
-        this.navigateTo('waiting');
-        const statusEl = document.getElementById('waiting-status');
-        if (statusEl) statusEl.textContent = 'Connecting to room...';
+            this.state.peerManager.onError((err) => {
+                console.error('❌ Connection error:', err);
+                Utils.showToast('❌ Failed to connect: ' + err.message, 'error');
+            });
+
+            this.state.peerManager.onData((data) => {
+                console.log('📨 Data received:', data.type);
+                if (data.type === 'file') {
+                    this.handleReceivedFile(data);
+                }
+                if (data.type === 'chat') {
+                    this.chatManager.receiveMessage(data);
+                    this.renderChatMessages();
+                }
+            });
+
+            this.state.peerManager.onDisconnect(() => {
+                console.log('🔌 Disconnected from sender');
+                this.state.isConnected = false;
+                Utils.showToast('🔌 Connection lost', 'error');
+            });
+
+            // Show waiting room
+            this.navigateTo('waiting');
+            const statusEl = document.getElementById('waiting-status');
+            if (statusEl) statusEl.textContent = 'Connecting to room...';
+
+            // Connect to the room
+            console.log('🔗 Attempting to connect to:', code);
+            
+            this.state.peerManager.connectToRoom()
+                .then(() => {
+                    console.log('✅ Successfully connected to room!');
+                })
+                .catch((err) => {
+                    console.error('❌ Failed to connect:', err);
+                    Utils.showToast('❌ Failed to join: ' + err.message, 'error');
+                    // Go back to landing
+                    setTimeout(() => {
+                        this.navigateTo('landing');
+                    }, 2000);
+                });
+
+        } catch (error) {
+            console.error('❌ Join room error:', error);
+            Utils.showToast('❌ Failed to join: ' + error.message, 'error');
+        }
     }
 
     showWaitingRoom(roomId) {
@@ -319,8 +382,10 @@ export class App {
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H
                 });
+                console.log('✅ QR code generated');
             } catch (e) {
-                qrContainer.innerHTML = `<p class="text-on-surface-variant">QR: ${roomId}</p>`;
+                console.warn('QR generation error:', e);
+                qrContainer.innerHTML = `<p class="text-on-surface-variant">Room Code: ${roomId}</p>`;
             }
         }
 
@@ -332,7 +397,7 @@ export class App {
         });
 
         const statusEl = document.getElementById('waiting-status');
-        if (statusEl) statusEl.textContent = 'Waiting for connection...';
+        if (statusEl) statusEl.textContent = '⏳ Waiting for someone to join...';
         this.navigateTo('waiting');
     }
 
@@ -442,7 +507,6 @@ export class App {
         }
         Utils.showToast('✅ All files sent!', 'success');
         
-        // Show confirmation
         this.showConfirmation(files);
     }
 
@@ -459,7 +523,6 @@ export class App {
 
     handleReceivedFile(data) {
         const file = this.fileManager.addReceivedFile(data);
-        
         Utils.showToast(`📥 Received: ${data.name}`, 'success');
         this.renderReceiverFiles();
         this.updateReceiverStatus();
@@ -502,10 +565,8 @@ export class App {
         
         if (badge) badge.textContent = `${activeCount} IN PROGRESS`;
 
-        // Update active transfers
         this.renderActiveTransfers();
 
-        // Update received files
         if (files.length === 0) {
             list.innerHTML = '<p class="text-on-surface-variant text-sm text-center py-4">No files received yet</p>';
             return;
@@ -656,9 +717,7 @@ export class App {
 
         if (channelEl) channelEl.textContent = 'AirSend Transfer';
 
-        // Fire confetti!
         this.fireConfetti();
-
         this.navigateTo('confirmation');
     }
 
