@@ -438,6 +438,10 @@ export class App {
         Utils.showToast('🗑️ Files cleared', 'info');
     }
 
+    // ============================================
+    // FIXED: SEND ALL FILES
+    // ============================================
+
     async sendAllFiles() {
         const files = this.fileManager.getFiles();
         if (files.length === 0 || !this.state.peerManager || !this.state.isConnected) {
@@ -458,12 +462,12 @@ export class App {
         for (const file of files) {
             try {
                 const fileData = await this.fileManager.readFileAsBuffer(file);
-                // ✅ FIXED: Properly structured message with unique type
+                // ✅ FIXED: Proper message format with type: 'file'
                 this.state.peerManager.send({
-                    type: 'file',
+                    type: 'file',  // ← This MUST be 'file'
                     payload: {
                         name: fileData.name,
-                        mimeType: fileData.type,
+                        mimeType: fileData.type || 'application/octet-stream',
                         size: fileData.size,
                         data: fileData.data
                     }
@@ -483,6 +487,7 @@ export class App {
         }
         Utils.showToast('✅ All files sent!', 'success');
         
+        // Show confirmation after all files are sent
         this.showConfirmation(files);
     }
 
@@ -494,50 +499,72 @@ export class App {
     }
 
     // ============================================
-    // RECEIVER FUNCTIONS
+    // FIXED: HANDLE RECEIVED FILE
     // ============================================
 
     handleReceivedFile(data) {
-        // ✅ FIXED: Handle both old and new message formats
+        console.log('📨 Handling received data:', data);
+        
+        // ✅ FIXED: Handle the new format with 'payload'
         let fileData;
         if (data.payload) {
-            // New format
+            // New format (with payload)
             fileData = {
-                name: data.payload.name,
+                name: data.payload.name || 'unknown',
                 type: data.payload.mimeType || 'application/octet-stream',
-                size: data.payload.size,
+                size: data.payload.size || data.payload.data?.byteLength || 0,
                 data: data.payload.data
             };
         } else {
             // Legacy format (backward compatible)
             fileData = {
-                name: data.name,
+                name: data.name || 'unknown',
                 type: data.type || 'application/octet-stream',
                 size: data.size || data.data?.byteLength || 0,
                 data: data.data
             };
         }
 
+        console.log('📄 File received:', fileData.name, Utils.formatFileSize(fileData.size));
+        
+        // Add to received files
         const file = this.fileManager.addReceivedFile(fileData);
-        Utils.showToast(`📥 Received: ${fileData.name}`, 'success');
+        
+        // Show notification
+        Utils.showToast(`📥 Received: ${fileData.name} (${Utils.formatFileSize(fileData.size)})`, 'success');
+        
+        // Update UI
         this.renderReceiverFiles();
         this.updateReceiverStatus();
+        
+        // Auto-download
         this.downloadFile(file.id);
     }
 
     downloadFile(fileId) {
         const file = this.fileManager.getReceivedFile(fileId);
-        if (!file) return;
+        if (!file) {
+            console.warn('⚠️ File not found:', fileId);
+            return;
+        }
         
-        const blob = new Blob([file.data], { type: file.type || 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        console.log('📥 Downloading:', file.name);
+        
+        try {
+            const blob = new Blob([file.data], { type: file.type || 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log('✅ Download started:', file.name);
+        } catch (error) {
+            console.error('❌ Download error:', error);
+            Utils.showToast('❌ Failed to download file', 'error');
+        }
     }
 
     downloadAllFiles() {
@@ -568,16 +595,19 @@ export class App {
             return;
         }
 
-        list.innerHTML = files.slice(-5).reverse().map(f => `
-            <div class="py-sm flex items-center justify-between group cursor-pointer">
-                <div class="flex items-center gap-sm">
+        // Show files with download buttons
+        list.innerHTML = files.slice(-10).reverse().map(f => `
+            <div class="py-sm flex items-center justify-between group cursor-pointer hover:bg-surface-container-low rounded-lg px-2 transition-colors">
+                <div class="flex items-center gap-sm flex-1 min-w-0">
                     <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">${Utils.getFileIcon(f.name)}</span>
-                    <div>
-                        <p class="text-body-sm font-medium text-on-surface">${f.name}</p>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-body-sm font-medium text-on-surface truncate">${f.name}</p>
                         <p class="text-[12px] text-on-surface-variant">${f.time || 'Just now'} • ${Utils.formatFileSize(f.size)}</p>
                     </div>
                 </div>
-                <button onclick="window.app.downloadFile('${f.id}')" class="material-symbols-outlined text-outline hover:text-primary opacity-0 group-hover:opacity-100 transition-all">download</button>
+                <button onclick="window.app.downloadFile('${f.id}')" class="material-symbols-outlined text-outline hover:text-primary p-2 rounded-full hover:bg-primary-container/10 transition-all">
+                    download
+                </button>
             </div>
         `).join('');
     }
@@ -601,7 +631,7 @@ export class App {
                             <span class="material-symbols-outlined text-primary">${Utils.getFileIcon(t.name)}</span>
                         </div>
                         <div>
-                            <p class="font-bold text-on-surface text-body-sm">${t.name}</p>
+                            <p class="font-bold text-on-surface text-body-sm truncate max-w-[150px]">${t.name}</p>
                             <p class="text-on-surface-variant text-[12px]">Receiving...</p>
                         </div>
                     </div>
