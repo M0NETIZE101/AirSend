@@ -133,7 +133,7 @@ export class App {
             this.setupFileDrop();
         }, 500);
 
-        // Join room on Enter key in code inputs
+        // Auto-join on Enter key in code inputs
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 const inputs = document.querySelectorAll('#landing-room-inputs .code-box');
@@ -229,24 +229,22 @@ export class App {
     }
 
     // ============================================
-    // ROOM MANAGEMENT - FIXED
+    // ROOM MANAGEMENT
     // ============================================
 
     createRoom() {
         try {
             console.log('🚀 Creating room...');
             
-            // Generate 6-digit room code
             const roomId = Utils.generateRoomId();
             this.state.roomId = roomId;
             this.state.isSender = true;
             
             console.log('📋 Room ID:', roomId);
 
-            // Create peer manager with room ID
+            // Sender: Use roomId as their own Peer ID
             this.state.peerManager = new PeerManager(roomId, { isSender: true });
             
-            // Set up event handlers BEFORE opening
             this.state.peerManager.onConnection(() => {
                 console.log('✅ Peer connected!');
                 this.state.isConnected = true;
@@ -277,11 +275,19 @@ export class App {
                 Utils.showToast('🔌 Connection lost', 'error');
             });
 
+            // Sender waits for connection
+            this.state.peerManager.waitForConnection()
+                .then(() => {
+                    console.log('✅ Peer connected successfully!');
+                })
+                .catch((err) => {
+                    console.error('❌ Connection failed:', err);
+                    Utils.showToast('❌ Connection failed: ' + err.message, 'error');
+                });
+
             // Show waiting room
             this.showWaitingRoom(roomId);
             Utils.showToast('✅ Room created: ' + roomId, 'success');
-            
-            console.log('✅ Room created successfully! Waiting for peer...');
 
         } catch (error) {
             console.error('❌ Create room error:', error);
@@ -307,10 +313,9 @@ export class App {
             this.state.roomId = code;
             this.state.isSender = false;
 
-            // Create peer manager (no room ID initially)
+            // Joiner: Use null for auto-assigned ID
             this.state.peerManager = new PeerManager(null, { isSender: false });
             
-            // Set up event handlers
             this.state.peerManager.onConnection(() => {
                 console.log('✅ Connected to sender!');
                 this.state.isConnected = true;
@@ -349,14 +354,13 @@ export class App {
             // Connect to the room
             console.log('🔗 Attempting to connect to:', code);
             
-            this.state.peerManager.connectToRoom()
+            this.state.peerManager.connectToRoom(code)
                 .then(() => {
                     console.log('✅ Successfully connected to room!');
                 })
                 .catch((err) => {
                     console.error('❌ Failed to connect:', err);
                     Utils.showToast('❌ Failed to join: ' + err.message, 'error');
-                    // Go back to landing
                     setTimeout(() => {
                         this.navigateTo('landing');
                     }, 2000);
@@ -369,7 +373,6 @@ export class App {
     }
 
     showWaitingRoom(roomId) {
-        // Update QR code
         const qrContainer = document.getElementById('waiting-qr');
         if (qrContainer) {
             qrContainer.innerHTML = '';
@@ -389,7 +392,6 @@ export class App {
             }
         }
 
-        // Update room code boxes
         const boxes = document.querySelectorAll('#waiting-room-codes .code-box');
         const digits = roomId.split('');
         boxes.forEach((box, i) => {
