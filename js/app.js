@@ -1,6 +1,7 @@
-import { PeerManager } from './js/peer-connection.js';
-import { FileTransfer } from './js/file-transfer.js';
-import { UI } from './js/ui.js';
+// Correct imports (relative to app.js location)
+import { PeerManager } from './peer-connection.js';
+import { FileTransfer } from './file-transfer.js';
+import { UI } from './ui.js';
 class AirSendApp {
     constructor() {
         this.peer = null;
